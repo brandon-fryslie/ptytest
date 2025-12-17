@@ -57,6 +57,9 @@ test = [
     "pytest-timeout>=2.0.0",
 ]
 
+[project.scripts]
+ptytest = "ptytest.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/brandon-fryslie/ptytest"
 Repository = "https://github.com/brandon-fryslie/ptytest"
