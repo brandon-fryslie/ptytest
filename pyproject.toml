@@ -1,0 +1,104 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ptytest"
+version = "0.1.0"
+description = "Real terminal testing framework - test interactive CLI apps with actual keystrokes"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "Brandon Fryslie" },
+]
+keywords = [
+    "testing",
+    "terminal",
+    "tmux",
+    "pty",
+    "pexpect",
+    "interactive",
+    "cli",
+    "zsh",
+    "zle",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: System :: Shells",
+    "Topic :: Terminals",
+]
+dependencies = [
+    "pexpect>=4.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-timeout>=2.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-timeout>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/brandon-fryslie/ptytest"
+Repository = "https://github.com/brandon-fryslie/ptytest"
+Documentation = "https://github.com/brandon-fryslie/ptytest#readme"
+
+[project.entry-points.pytest11]
+ptytest = "ptytest.pytest_plugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ptytest"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/examples",
+    "/README.md",
+    "/LICENSE",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "keybinding: marks tests that test keybindings",
+    "zle: marks tests for ZLE widgets",
+    "zaw: marks tests for zaw widgets",
+    "e2e: marks end-to-end workflow tests",
+    "slow: marks tests as slow",
+    "interactive: marks tests requiring interactive terminal",
+]
+timeout = 30
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
