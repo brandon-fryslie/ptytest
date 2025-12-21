@@ -42,13 +42,17 @@ classifiers = [
     "Topic :: Terminals",
 ]
 dependencies = [
+    "ptydriver>=0.2.0",
     "pexpect>=4.8.0",
+    "pyte>=0.8.0",
+    "textual>=0.40.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
     "pytest-timeout>=2.0.0",
+    "pytest-cov>=4.0.0",
     "ruff>=0.1.0",
     "mypy>=1.0.0",
 ]
@@ -89,6 +93,10 @@ markers = [
     "e2e: marks end-to-end workflow tests",
     "slow: marks tests as slow",
     "interactive: marks tests requiring interactive terminal",
+    "direct_pty: marks tests using PtySession (no tmux)",
+    "claude_code: marks tests for Claude Code CLI",
+    "docker: marks tests requiring Docker",
+    "viz: marks tests for web visualization feature",
 ]
 timeout = 30
 
@@ -101,7 +109,7 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "C4"]
 ignore = ["E501"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true

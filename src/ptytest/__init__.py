@@ -13,11 +13,50 @@ Example:
             session.send_prefix_key('h')  # Send Ctrl-b h
             assert session.get_pane_count() == 2
             assert "help" in session.get_pane_content()
+
+    from ptytest import PtySession
+
+    def test_my_cli():
+        with PtySession(["bash", "--norc"]) as session:
+            session.send_keys("echo hello")
+            assert session.verify_text_appears("hello")
 """
 
 __version__ = "0.1.0"
 
-from .session import TmuxSession
-from .keys import Keys
+from .keys import (
+    FzfKeys,
+    HtopKeys,
+    Keys,
+    LazygitKeys,
+    LessKeys,
+    MacKeys,
+    NcduKeys,
+    ReadlineKeys,
+    TmuxKeys,
+    VimKeys,
+)
+from .neovim import NeovimSession
+from .session import BaseSession, PtySession, TmuxSession
 
-__all__ = ["TmuxSession", "Keys", "__version__"]
+__all__ = [
+    # Session classes
+    "BaseSession",
+    "TmuxSession",
+    "PtySession",
+    "NeovimSession",
+    # Key classes - Base
+    "Keys",
+    "MacKeys",
+    "ReadlineKeys",
+    # Key classes - Applications
+    "FzfKeys",
+    "VimKeys",
+    "TmuxKeys",
+    "LazygitKeys",
+    "HtopKeys",
+    "LessKeys",
+    "NcduKeys",
+    # Version
+    "__version__",
+]

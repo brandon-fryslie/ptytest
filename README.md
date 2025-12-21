@@ -8,9 +8,12 @@ ptytest lets you write automated tests for interactive terminal applications (li
 
 - **Real Keystrokes**: Send actual key sequences (Ctrl-b, Escape codes, etc.)
 - **Real Output**: Verify actual terminal content, not mocked responses
+- **Direct PTY Testing**: Test any CLI application directly via PtySession
 - **tmux Integration**: Full control over tmux sessions, panes, and state
 - **ZLE Support**: Test zsh line editor widgets with escape sequences
 - **Pytest Plugin**: Auto-registered fixtures for easy test writing
+- **App-Specific Keys**: Built-in helpers for fzf, vim, and more
+- **Web Visualization**: Real-time browser terminal view with xterm.js (optional)
 - **Un-gameable**: Tests verify real behavior - they fail when functionality breaks
 
 ## Installation
@@ -31,18 +34,52 @@ pip install -e .
 ### Requirements
 
 - Python 3.8+
-- tmux (installed and in PATH)
 - macOS or Linux
+- tmux (only for TmuxSession; PtySession works without it)
 
 ```bash
-# Install tmux on macOS
+# Install tmux on macOS (optional, for TmuxSession)
 brew install tmux
 
-# Install tmux on Ubuntu/Debian
+# Install tmux on Ubuntu/Debian (optional, for TmuxSession)
 sudo apt install tmux
 ```
 
 ## Quick Start
+
+### Testing Any CLI with PtySession
+
+```python
+from ptytest import PtySession, Keys
+
+def test_fzf_filtering(pty_session_factory):
+    """Test fzf fuzzy finder filtering."""
+    # Spawn fzf with some items
+    session = pty_session_factory(["bash", "-c", "echo -e 'apple\\nbanana\\ncherry' | fzf"])
+
+    # Wait for fzf to start
+    assert session.verify_text_appears("apple")
+
+    # Type search query
+    session.send_keys("ban", literal=True)
+
+    # Verify filtering works
+    assert session.verify_text_appears("banana")
+
+def test_ncdu_navigation(pty_session_factory):
+    """Test ncdu disk analyzer."""
+    session = pty_session_factory(["ncdu", "/tmp"])
+
+    # Navigate with arrow keys
+    session.send_raw(Keys.DOWN)
+    session.send_raw(Keys.ENTER)  # Enter directory
+    session.send_raw(Keys.LEFT)   # Back to parent
+
+    # Quit
+    session.send_keys("q", literal=True)
+```
+
+### Testing tmux with TmuxSession
 
 ```python
 import pytest
@@ -80,7 +117,26 @@ pytest -v
 
 ## Usage
 
-### Basic Session Control
+### PtySession - Test Any CLI
+
+PtySession spawns processes directly via PTY, perfect for testing any interactive CLI:
+
+```python
+from ptytest import PtySession, Keys
+
+# Using context manager (recommended)
+with PtySession(["python", "-i"]) as session:
+    session.send_keys("2 + 2")
+    assert session.verify_text_appears("4")
+
+# Using factory fixture
+def test_my_cli(pty_session_factory):
+    session = pty_session_factory(["my-cli", "--interactive"])
+    session.send_keys("help")
+    assert session.verify_text_appears("Commands")
+```
+
+### TmuxSession - Test tmux
 
 ```python
 from ptytest import TmuxSession
@@ -192,7 +248,27 @@ with TmuxSession() as session:
 
 ptytest automatically registers as a pytest plugin, providing fixtures:
 
-### Fixtures
+### PtySession Fixtures (for any CLI)
+
+```python
+# Test any CLI with pty_session (spawns bash by default)
+def test_something(pty_session):
+    pty_session.send_keys("ls")
+    assert pty_session.verify_text_appears("README")
+
+# Factory for custom commands
+def test_fzf(pty_session_factory):
+    session = pty_session_factory(["fzf", "--version"])
+    assert session.verify_text_appears("fzf")
+
+# Factory with custom dimensions
+def test_vim(pty_session_factory):
+    session = pty_session_factory(["vim"], width=80, height=24)
+    session.send_raw(Keys.ESCAPE)
+    session.send_keys(":q!", literal=True)
+```
+
+### TmuxSession Fixtures
 
 ```python
 # Standard fixture with user's tmux config
@@ -235,7 +311,40 @@ Run specific test categories:
 ```bash
 pytest -m keybinding    # Only keybinding tests
 pytest -m zle           # Only ZLE tests
+pytest -m direct_pty    # Only PtySession tests
 pytest -m "not slow"    # Skip slow tests
+```
+
+### Extended Key Classes
+
+```python
+from ptytest import Keys, FzfKeys, VimKeys
+
+# Standard keys
+Keys.CTRL_C, Keys.ESCAPE, Keys.ENTER, Keys.TAB
+Keys.UP, Keys.DOWN, Keys.LEFT, Keys.RIGHT
+Keys.F1, Keys.F2, ..., Keys.F12
+
+# Arrow key modifiers
+Keys.SHIFT_UP, Keys.SHIFT_DOWN      # Select in many apps
+Keys.CTRL_LEFT, Keys.CTRL_RIGHT     # Word navigation
+Keys.ALT_UP, Keys.ALT_DOWN          # Alt+arrow
+
+# Helpers
+Keys.meta('d')   # Alt+D -> '\x1bd'
+Keys.ctrl('c')   # Ctrl+C -> '\x03'
+
+# fzf-specific
+FzfKeys.ACCEPT              # Enter to select
+FzfKeys.TOGGLE              # Tab to toggle selection
+FzfKeys.TOGGLE_ALL          # Ctrl+A
+FzfKeys.CLEAR_QUERY         # Ctrl+U
+
+# vim-specific
+VimKeys.NORMAL_MODE         # Escape
+VimKeys.QUIT                # :q
+VimKeys.SAVE_QUIT           # :wq
+VimKeys.vim_command('wq')   # :wq + Enter
 ```
 
 ## Examples
@@ -301,6 +410,79 @@ def test_complete_workflow(tmux_session):
     assert "Hello from pane 2" in content
 ```
 
+### Testing AI CLI Tools
+
+ptytest excels at testing AI-powered CLI tools with non-deterministic outputs. See `examples/test_claude_code.py` for a complete example.
+
+```python
+@pytest.mark.claude_code
+def test_ai_cli_interaction(pty_session_factory):
+    """Test Claude Code CLI - demonstrates AI tool testing patterns."""
+    # Launch AI CLI
+    session = pty_session_factory(["claude"], timeout=30)
+
+    # Wait for ready (AI tools may take time to initialize)
+    assert session.verify_text_appears(">", timeout=30)
+
+    # Send a prompt
+    session.send_keys("What is 2+2? Answer with just the number.")
+    time.sleep(5)  # Wait for streaming response
+
+    # Non-deterministic assertions - check for concepts, not exact text
+    content = session.get_content()
+    assert len(content) > 100, "No response received"
+    assert "error" not in content.lower() or "4" in content
+
+    # Test context retention across turns
+    session.send_keys("What did I just ask you?")
+    time.sleep(5)
+    content = session.get_content()
+    assert "2" in content or "math" in content.lower()
+```
+
+#### Docker Mode for Tool Use Testing
+
+For AI tools that modify files or run commands, use Docker for safety:
+
+```python
+@pytest.mark.docker
+def test_ai_tool_use_safely(docker_image, temp_workspace):
+    """Test AI tool use in isolated Docker container."""
+    cmd = [
+        "docker", "run", "--rm", "-i",
+        "-e", f"ANTHROPIC_API_KEY={os.environ['ANTHROPIC_API_KEY']}",
+        "-v", f"{temp_workspace}:/workspace",
+        "-w", "/workspace",
+        docker_image, "claude"
+    ]
+
+    with PtySession(cmd, timeout=30) as session:
+        assert session.verify_text_appears(">", timeout=30)
+
+        # Ask AI to create a file
+        session.send_keys("Create a file named test.txt with 'Hello'")
+        time.sleep(5)
+
+        # Handle tool approval if needed
+        content = session.get_content()
+        if "approve" in content.lower():
+            session.send_keys("y")
+            time.sleep(3)
+
+        # Verify file was created
+        assert (temp_workspace / "test.txt").exists()
+```
+
+**Key patterns for AI CLI testing:**
+
+1. **Use generous timeouts** - AI responses take time to generate
+2. **Non-deterministic assertions** - Check for presence of concepts/keywords, not exact text
+3. **Verify side effects** - For tool use, check files created or commands run
+4. **Docker for safety** - Isolate filesystem and command execution
+5. **Skip gracefully** - Tests should skip if API keys or prerequisites are missing
+
+See `examples/test_claude_code.py` for complete examples with both direct and Docker modes.
+
 ## Why "Un-gameable" Tests?
 
 Traditional unit tests can be "gamed" with mocks that don't reflect real behavior. ptytest tests are un-gameable because they:
@@ -311,6 +493,127 @@ Traditional unit tests can be "gamed" with mocks that don't reflect real behavio
 4. **Test observable outcomes** - Pane counts, content, state changes
 
 If a ptytest test passes, the functionality actually works. If it fails, something is genuinely broken.
+
+
+## Web Visualization
+
+Visualize your terminal sessions in real-time through your web browser using xterm.js. Perfect for demos, documentation, and debugging.
+
+### Installation
+
+Install the visualization dependencies:
+
+```bash
+# Development installation
+uv pip install -e ".[viz]"
+
+# Production installation
+pip install ptytest[viz]
+```
+
+### Basic Usage
+
+Enable visualization by adding `enable_viz=True` to your PtySession:
+
+```python
+from ptytest import PtySession
+
+# Enable web visualization
+with PtySession(['bash'], enable_viz=True, viz_port=8080) as session:
+    session.send_keys('ls -la')
+    session.send_keys('echo "Hello from ptytest!"')
+    # Open http://localhost:8080 in browser to view
+```
+
+The visualization server will start automatically and display terminal output in your browser with full ANSI color support.
+
+### Features
+
+- **Real-time streaming**: See terminal output as it happens
+- **ANSI color support**: Full color rendering via xterm.js
+- **Multi-viewer**: Multiple browsers can watch the same session
+- **Auto-reconnect**: Browser reconnects automatically if connection drops
+- **Read-only**: Visualization is for viewing only (no keyboard input from browser)
+- **Zero overhead**: Disabled by default, only runs when `enable_viz=True`
+
+### Example: Visualizing fzf
+
+```python
+from ptytest import PtySession
+
+# Visualize fzf fuzzy finder
+cmd = ['bash', '-c', 'echo -e "apple\\nbanana\\ncherry" | fzf']
+
+with PtySession(cmd, enable_viz=True, viz_port=8080) as session:
+    # Wait for fzf to start
+    session.verify_text_appears('3/3')
+    
+    # Type search query
+    session.send_keys('ban', literal=True)
+    
+    # Watch the filtering happen in your browser!
+    # Open http://localhost:8080
+```
+
+### Configuration
+
+```python
+# Custom port
+with PtySession(['bash'], enable_viz=True, viz_port=9090) as session:
+    pass  # Server runs on http://localhost:9090
+
+# Default port is 8080
+with PtySession(['bash'], enable_viz=True) as session:
+    pass  # Server runs on http://localhost:8080
+```
+
+### Use Cases
+
+**Demos and Documentation**:
+```python
+# Record a demo session
+with PtySession(['bash'], enable_viz=True) as session:
+    session.send_keys('# This is a demo')
+    session.send_keys('ls -la')
+    time.sleep(10)  # Keep alive for viewing
+```
+
+**Debugging Tests**:
+```python
+# Enable visualization for failing tests
+def test_my_cli(pty_session_factory):
+    session = pty_session_factory(['my-cli'], enable_viz=True, viz_port=8080)
+    # Debug by watching http://localhost:8080
+```
+
+**Multiple Sessions**:
+```python
+# Different ports for different sessions
+session1 = PtySession(['bash'], enable_viz=True, viz_port=8080)
+session2 = PtySession(['bash'], enable_viz=True, viz_port=8081)
+# View both at http://localhost:8080 and http://localhost:8081
+```
+
+### Troubleshooting
+
+**Port already in use**:
+```python
+# Use a different port
+with PtySession(['bash'], enable_viz=True, viz_port=9090) as session:
+    pass
+```
+
+**Missing dependencies**:
+```bash
+# Error: Visualization dependencies not installed
+# Solution: Install viz extras
+uv pip install ptytest[viz]
+```
+
+**Browser not connecting**:
+- Check firewall settings
+- Verify server is running: `http://localhost:PORT/health`
+- Check server startup message in console
 
 ## Troubleshooting
 

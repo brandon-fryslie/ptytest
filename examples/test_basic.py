@@ -4,8 +4,10 @@ Basic examples of ptytest usage.
 Run with: pytest examples/ -v
 """
 
-import pytest
 import time
+
+import pytest
+
 from ptytest import Keys
 
 
@@ -63,15 +65,14 @@ class TestTmuxKeybindings:
 
     def test_prefix_key(self, tmux_session):
         """Test sending tmux prefix + key."""
-        # Test a reliable built-in: Ctrl-b c creates new window
-        initial_content = tmux_session.get_pane_content()
-
         # Send Ctrl-b t (clock mode)
         tmux_session.send_prefix_key('t')
         time.sleep(0.5)
 
-        # Clock mode shows the time - any change indicates it worked
+        # Clock mode shows the time
         content = tmux_session.get_pane_content()
+        # Any change from empty prompt indicates it worked
+        assert len(content.strip()) > 0
 
         # Press any key to exit clock mode
         tmux_session.send_raw('q')

@@ -6,6 +6,7 @@ import argparse
 import shutil
 import subprocess
 import sys
+from typing import Callable, Optional
 
 from . import __version__
 
@@ -32,11 +33,7 @@ def check_environment() -> bool:
 
     # Check Python version
     py_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-    if sys.version_info >= (3, 8):
-        print(f"✓ Python version: {py_version}")
-    else:
-        print(f"✗ Python version {py_version} is below minimum (3.8)")
-        all_ok = False
+    print(f"✓ Python version: {py_version}")
 
     # Check pexpect
     try:
@@ -86,10 +83,10 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 1
 
     pytest_args = args.pytest_args or []
-    return pytest.main(pytest_args)
+    return pytest.main(pytest_args)  # type: ignore[no-any-return]
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: Optional[list] = None) -> int:
     """Main entry point for ptytest CLI."""
     parser = argparse.ArgumentParser(
         prog="ptytest",
@@ -129,7 +126,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 0
 
-    return args.func(args)
+    # Type-safe way to call the function
+    func: Callable[[argparse.Namespace], int] = args.func
+    return func(args)
 
 
 if __name__ == "__main__":

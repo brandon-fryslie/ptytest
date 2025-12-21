@@ -1,453 +1,644 @@
 """
-TmuxSession: Real tmux session management for automated testing.
+Session classes for managing interactive CLI testing.
 
-This module provides the TmuxSession class which manages real tmux processes
-for testing interactive terminal applications. Tests cannot be gamed with
-mocks - they verify actual tmux/terminal behavior.
+This module provides:
+- BaseSession: Abstract base class for all session types
+- TmuxSession: Real tmux session management for automated testing
+- PtySession: Direct PTY process management for testing any CLI
 
 Key Design Principles:
-1. Use real tmux subprocess (via pexpect), NOT mocks
-2. Send actual keystroke bytes (Ctrl-b h = '\\x02h')
-3. Verify observable outcomes (pane count, content, status bar)
-4. Enforce cleanup (no orphaned sessions)
+1. Use real processes (via pexpect), NOT mocks
+2. Send actual keystroke bytes
+3. Verify observable outcomes
+4. Enforce cleanup (no orphaned processes)
 5. Provide helpful error messages when tests fail
 """
 
 import os
-import time
 import subprocess
+import time
+from abc import ABC, abstractmethod
+from typing import Dict, List, Optional
+
 import pexpect
-from typing import Optional, List
+import pyte
+from ptydriver import PtyProcess as PtyProcessDriver
 
-from .keys import Keys
 
-
-class TmuxSession:
+class BaseSession(ABC):
     """
-    Manages a real tmux session for testing.
+    Abstract base class for terminal session management.
 
-    This class spawns an actual tmux process and allows sending
-    real keystrokes, verifying pane states, and capturing output.
+    All session types (TmuxSession, PtySession, etc.) inherit from this
+    class and implement the core methods for sending keys and reading content.
+
+    The session can be used as a context manager for automatic cleanup:
+        with SomeSession(...) as session:
+            session.send_keys("test")
+    """
+
+    def __init__(self, timeout: int = 5):
+        """
+        Initialize base session.
+
+        Args:
+            timeout: Default timeout in seconds for operations
+        """
+        self.timeout = timeout
+        self._is_cleaned_up = False
+
+    @abstractmethod
+    def send_keys(self, keys: str, delay: float = 0.15, literal: bool = False):
+        """
+        Send keys to the session.
+
+        Args:
+            keys: Keys to send
+            delay: Delay after sending for processing
+            literal: If True, send keys as-is without Enter
+        """
+        pass
+
+    @abstractmethod
+    def send_raw(self, sequence: str, delay: float = 0.15):
+        """
+        Send raw byte sequences or escape codes.
+
+        Args:
+            sequence: Raw string to send (can include escape sequences)
+            delay: Delay after sending
+        """
+        pass
+
+    @abstractmethod
+    def get_content(self, include_history: bool = True) -> str:
+        """
+        Get visible terminal content.
+
+        Args:
+            include_history: Whether to include scrollback history
+
+        Returns:
+            Text content of the terminal
+        """
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        """Clean up session resources. Must be called to prevent leaks."""
+        pass
+
+    def verify_text_appears(
+        self,
+        text: str,
+        timeout: Optional[float] = None,
+        include_history: bool = True,
+    ) -> bool:
+        """
+        Wait for text to appear in terminal content.
+
+        Args:
+            text: Text to wait for
+            timeout: Max seconds to wait (None = use default)
+            include_history: Whether to search scrollback history
+
+        Returns:
+            True if text appears within timeout, False otherwise
+        """
+        timeout = timeout if timeout is not None else self.timeout
+        start = time.time()
+
+        while time.time() - start < timeout:
+            content = self.get_content(include_history=include_history)
+            if text in content:
+                return True
+            time.sleep(0.1)
+
+        return False
+
+    def wait_for_text(
+        self,
+        text: str,
+        timeout: Optional[float] = None,
+        include_history: bool = True,
+    ):
+        """
+        Wait for text to appear, raising TimeoutError if it doesn't.
+
+        Args:
+            text: Text to wait for
+            timeout: Max seconds to wait (None = use default)
+            include_history: Whether to search scrollback history
+
+        Raises:
+            TimeoutError: If text doesn't appear within timeout
+        """
+        if not self.verify_text_appears(text, timeout, include_history):
+            content = self.get_content(include_history=include_history)
+            raise TimeoutError(
+                f"Text '{text}' did not appear within {timeout}s.\n"
+                f"Current content:\n{content}"
+            )
+
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensure cleanup."""
+        self.cleanup()
+        return False
+
+
+class TmuxSession(BaseSession):
+    """
+    Manages a real tmux session for testing tmux keybindings and ZLE widgets.
+
+    This class creates a detached tmux session, attaches to it via pexpect,
+    and provides methods to send keys and read pane content.
 
     Example:
         with TmuxSession() as session:
-            # Send Ctrl-b h
-            session.send_prefix_key('h')
-
-            # Verify help pane appeared
+            session.send_prefix_key('h')  # Send Ctrl-b h
             assert session.get_pane_count() == 2
 
-            # Verify content
-            content = session.get_pane_content()
-            assert "PANES" in content
-
     Attributes:
-        session_name: Unique name for this tmux session
-        config_file: Path to tmux config file
+        session_name: Unique tmux session name
         width: Terminal width in characters
         height: Terminal height in characters
         timeout: Default timeout for operations
     """
 
-    PREFIX_KEY = Keys.CTRL_B  # Ctrl-b as default tmux prefix
-
     def __init__(
         self,
         session_name: Optional[str] = None,
-        config_file: Optional[str] = None,
         width: int = 120,
         height: int = 40,
         timeout: int = 5,
-        shell: Optional[str] = None,
+        use_config: bool = True,
+        shell: str = "zsh",
     ):
         """
-        Create and attach to a real tmux session.
+        Create a new tmux session for testing.
 
         Args:
             session_name: Unique session name (auto-generated if None)
-            config_file: Path to tmux config (defaults to ~/.tmux.conf)
             width: Terminal width in characters
             height: Terminal height in characters
             timeout: Default timeout for operations in seconds
-            shell: Shell to use (defaults to user's default shell)
+            use_config: Whether to load user's ~/.tmux.conf
+            shell: Shell to use (default: zsh)
         """
-        self.session_name = session_name or f"ptytest-{os.getpid()}-{int(time.time())}"
-        self.config_file = config_file or os.path.expanduser("~/.tmux.conf")
+        super().__init__(timeout=timeout)
+
+        # Generate unique session name if not provided
+        if session_name is None:
+            import uuid
+
+            session_name = f"ptytest-{uuid.uuid4().hex[:8]}"
+
+        self.session_name = session_name
         self.width = width
         self.height = height
-        self.timeout = timeout
+        self.use_config = use_config
         self.shell = shell
-        self.process: Optional[pexpect.spawn] = None
-        self._is_cleaned_up = False
 
-        # Ensure no existing session with this name
-        self._kill_existing_session()
+        # Create detached session
+        cmd = ["tmux"]
+        if not use_config:
+            cmd.append("-f/dev/null")  # Don't load config
 
-        # Start tmux session
-        self._start_session()
-
-    def _kill_existing_session(self):
-        """Kill any existing session with our name (cleanup from failed tests)."""
-        subprocess.run(
-            ["tmux", "kill-session", "-t", self.session_name],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+        cmd.extend(
+            [
+                "new-session",
+                "-d",  # Detached
+                "-s",
+                session_name,  # Session name
+                "-x",
+                str(width),  # Width
+                "-y",
+                str(height),  # Height
+                shell,
+            ]
         )
 
-    def _start_session(self):
-        """
-        Spawn a real tmux session.
+        try:
+            subprocess.run(cmd, check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Failed to create tmux session: {e.stderr}") from e
 
-        Creates a DETACHED session first, then attaches to it with pexpect.
-        This ensures the shell inside tmux initializes properly and can accept
-        commands via send-keys, while still allowing raw keystroke injection
-        via pexpect for testing keybindings.
-        """
-        # Step 1: Create a DETACHED tmux session
-        cmd = [
-            "tmux",
-            "-f", self.config_file,
-            "new-session",
-            "-d",  # DETACHED
-            "-s", self.session_name,
-            "-x", str(self.width),
-            "-y", str(self.height),
-        ]
-
-        if self.shell:
-            cmd.extend([self.shell])
-
-        subprocess.run(cmd, check=True)
-
-        # Wait for session to be fully created
-        time.sleep(0.3)
-
-        # Verify session exists
-        if not self._session_exists():
-            raise RuntimeError(f"Failed to create tmux session: {self.session_name}")
+        # Attach to session via pexpect
+        attach_cmd = f"tmux attach-session -t {session_name}"
+        self.process = pexpect.spawn(
+            "/bin/bash", ["-c", attach_cmd], dimensions=(height, width), timeout=timeout
+        )
 
         # Wait for shell to be ready
-        self._wait_for_shell_ready()
-
-        # Step 2: Attach to the session with pexpect
-        self.process = pexpect.spawn(
-            "tmux",
-            ["-f", self.config_file, "attach", "-t", self.session_name],
-            encoding='utf-8',
-            timeout=self.timeout,
-            dimensions=(self.height, self.width)
-        )
-
-        # Wait for attach to complete
-        time.sleep(0.2)
-
-    def _wait_for_shell_ready(self, max_attempts: int = 10):
-        """
-        Wait for the shell inside tmux to be ready to accept commands.
-        """
-        marker = f"__PTYTEST_READY_{os.getpid()}__"
-
-        for attempt in range(max_attempts):
-            subprocess.run(
-                ["tmux", "send-keys", "-t", self.session_name, f"echo {marker}", "C-m"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-
-            time.sleep(0.15)
-
-            content = self.get_pane_content(include_history=False)
-            lines = content.split('\n')
-
-            for line in lines:
-                if marker in line and 'echo' not in line:
-                    subprocess.run(
-                        ["tmux", "send-keys", "-t", self.session_name, "clear", "C-m"],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
-                    )
-                    time.sleep(0.1)
-                    return
-
-            time.sleep(0.1)
-
-    def _session_exists(self) -> bool:
-        """Check if our tmux session exists."""
-        result = subprocess.run(
-            ["tmux", "has-session", "-t", self.session_name],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-        return result.returncode == 0
+        time.sleep(0.5)
 
     def send_prefix_key(self, key: str, delay: float = 0.15):
         """
-        Send tmux prefix + key (default: Ctrl-b + key).
-
-        This sends ACTUAL bytes to the tmux process, triggering
-        the real keybinding handlers. Cannot be faked with mocks.
-
-        Args:
-            key: The key to press after prefix (e.g., 'h' for Ctrl-b h)
-            delay: Delay after keystroke for tmux to process (seconds)
+        Send tmux prefix (Ctrl-b) + key combination.
 
         Example:
             session.send_prefix_key('h')  # Sends Ctrl-b h
-            session.send_prefix_key('o')  # Sends Ctrl-b o
-        """
-        if not self.process:
-            raise RuntimeError("Session not started")
 
-        self.process.send(self.PREFIX_KEY)
-        time.sleep(0.05)
+        Args:
+            key: Key to send after prefix
+            delay: Delay after sending for processing
+        """
+        # Send Ctrl-b (tmux default prefix)
+        self.process.send("\x02")  # Ctrl-b
+        time.sleep(0.05)  # Brief pause between prefix and key
         self.process.send(key)
         time.sleep(delay)
 
     def send_raw(self, sequence: str, delay: float = 0.15):
         """
-        Send raw bytes/escape sequences to the shell inside tmux.
-
-        This sends ACTUAL bytes directly to the pexpect process, which
-        reaches the shell (zsh/bash) inside tmux. Use this for testing
-        ZLE widgets and shell keybindings.
+        Send raw byte sequences or escape codes to tmux.
 
         Args:
             sequence: Raw string to send (can include escape sequences)
-            delay: Delay after sending for processing (seconds)
-
-        Example:
-            # Send Option+Shift+D (ESC D) to trigger zaw-rad-dev
-            session.send_raw('\\x1bD')
-
-            # Send Ctrl-R for reverse history search
-            session.send_raw('\\x12')
-
-            # Send Ctrl-X Ctrl-E for edit-command-line
-            session.send_raw('\\x18\\x05')
+            delay: Delay after sending for processing
         """
-        if not self.process:
-            raise RuntimeError("Session not started")
-
         self.process.send(sequence)
         time.sleep(delay)
 
     def send_keys(self, keys: str, delay: float = 0.15, literal: bool = False):
         """
-        Send keys to the currently active pane using tmux send-keys.
-
-        This is more reliable than using pexpect for complex commands.
+        Send keys to the tmux session.
 
         Args:
             keys: Keys to send
             delay: Delay after sending (seconds)
-            literal: If True, send keys without executing (no Enter key).
-                    If False (default), execute the command by adding Enter.
+            literal: If True, send keys as-is (no Enter).
+                    If False (default), append Enter key.
         """
-        cmd = ["tmux", "send-keys", "-t", self.session_name]
-
-        if literal:
-            cmd.extend(["-l", keys])
-        else:
-            cmd.extend([keys, "C-m"])
-
-        subprocess.run(cmd, check=True)
+        self.process.send(keys)
+        if not literal:
+            self.process.send("\r")
         time.sleep(delay)
 
-    def split_window(self, direction: str = "-h", target_pane: Optional[int] = None):
+    def get_pane_content(self, pane_id: Optional[str] = None) -> str:
         """
-        Split a pane in the session.
+        Get the visible content of a pane using tmux capture-pane.
 
         Args:
-            direction: "-h" for horizontal (left/right), "-v" for vertical (top/bottom)
-            target_pane: Pane number to split (None = current pane)
-        """
-        target = f"{self.session_name}:{target_pane}" if target_pane else self.session_name
-
-        result = subprocess.run(
-            ["tmux", "split-window", direction, "-t", target],
-            capture_output=True,
-            text=True
-        )
-
-        if result.returncode != 0:
-            raise RuntimeError(f"Failed to split window: {result.stderr}")
-
-        time.sleep(0.2)
-
-    def get_pane_count(self) -> int:
-        """
-        Get the number of panes in the session.
-
-        Returns:
-            Number of panes currently in the session
-        """
-        result = subprocess.run(
-            ["tmux", "list-panes", "-t", self.session_name, "-F", "#{pane_id}"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        panes = result.stdout.strip().split('\n') if result.stdout.strip() else []
-        return len(panes)
-
-    def get_pane_ids(self) -> List[str]:
-        """Get list of pane IDs in the session."""
-        result = subprocess.run(
-            ["tmux", "list-panes", "-t", self.session_name, "-F", "#{pane_id}"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return result.stdout.strip().split('\n') if result.stdout.strip() else []
-
-    def get_pane_content(self, pane_id: Optional[str] = None, include_history: bool = True) -> str:
-        """
-        Capture the visible content of a pane.
-
-        Args:
-            pane_id: Specific pane ID (e.g., "%1"), or None for current pane
-            include_history: If True, capture scrollback history (last 1000 lines).
+            pane_id: Pane identifier (None = current pane)
 
         Returns:
             Text content of the pane
         """
-        target = pane_id if pane_id else self.session_name
+        cmd = ["tmux", "capture-pane", "-p", "-t", self.session_name]
+        if pane_id:
+            cmd.extend(["-t", pane_id])
 
-        if include_history:
-            cmd = ["tmux", "capture-pane", "-t", target, "-p", "-S", "-1000"]
-        else:
-            cmd = ["tmux", "capture-pane", "-t", target, "-p"]
-
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
         return result.stdout
 
-    def get_pane_height(self, pane_id: Optional[str] = None) -> int:
-        """Get the height of a pane in lines."""
-        target = pane_id if pane_id else self.session_name
+    def get_content(self, include_history: bool = True) -> str:
+        """
+        Get visible terminal content.
 
-        result = subprocess.run(
-            ["tmux", "display-message", "-t", target, "-p", "#{pane_height}"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return int(result.stdout.strip())
+        Args:
+            include_history: If True, include scrollback history
+
+        Returns:
+            Text content of the current pane
+        """
+        cmd = ["tmux", "capture-pane", "-p", "-t", self.session_name]
+        if include_history:
+            cmd.append("-S")
+            cmd.append("-")  # Start from history beginning
+
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        return result.stdout
+
+    def get_pane_count(self) -> int:
+        """
+        Get the number of panes in the current window.
+
+        Returns:
+            Number of panes
+        """
+        cmd = ["tmux", "list-panes", "-t", self.session_name]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        return len(result.stdout.strip().split("\n")) if result.stdout.strip() else 0
+
+    def get_pane_ids(self) -> List[str]:
+        """
+        Get list of pane IDs in the current window.
+
+        Returns:
+            List of pane IDs (e.g., ['%0', '%1'])
+        """
+        cmd = ["tmux", "list-panes", "-t", self.session_name, "-F", "#{pane_id}"]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        return result.stdout.strip().split("\n") if result.stdout.strip() else []
+
+    def split_window(self, direction: str = "-h"):
+        """
+        Split the current window into panes.
+
+        Args:
+            direction: Split direction ('-h' = horizontal/side-by-side,
+                                      '-v' = vertical/top-bottom)
+        """
+        cmd = ["tmux", "split-window", direction, "-t", self.session_name]
+        subprocess.run(cmd, check=True, capture_output=True)
+        time.sleep(0.2)  # Let split settle
+
+    def get_pane_height(self, pane_id: Optional[str] = None) -> int:
+        """
+        Get height of a pane in lines.
+
+        Args:
+            pane_id: Pane identifier (None = current pane)
+
+        Returns:
+            Height in lines
+        """
+        target = pane_id if pane_id else self.session_name
+        cmd = ["tmux", "display-message", "-p", "-t", target, "#{pane_height}"]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        return int(result.stdout.strip()) if result.stdout.strip() else 0
 
     def get_pane_width(self, pane_id: Optional[str] = None) -> int:
-        """Get the width of a pane in columns."""
+        """
+        Get width of a pane in characters.
+
+        Args:
+            pane_id: Pane identifier (None = current pane)
+
+        Returns:
+            Width in characters
+        """
         target = pane_id if pane_id else self.session_name
-
-        result = subprocess.run(
-            ["tmux", "display-message", "-t", target, "-p", "#{pane_width}"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return int(result.stdout.strip())
-
-    def get_status_bar(self) -> str:
-        """
-        Capture the status bar content.
-
-        Returns:
-            Status bar text
-        """
-        result = subprocess.run(
-            ["tmux", "display-message", "-t", self.session_name, "-p",
-             "#{status-left}#{status-right}"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return result.stdout.strip()
-
-    def verify_text_appears(self, text: str, timeout: float = 2.0, pane_id: Optional[str] = None) -> bool:
-        """
-        Wait for text to appear in a pane.
-
-        Args:
-            text: Text to search for
-            timeout: How long to wait (seconds)
-            pane_id: Specific pane to check, or None for current pane
-
-        Returns:
-            True if text appears within timeout, False otherwise
-        """
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            content = self.get_pane_content(pane_id)
-            if text in content:
-                return True
-            time.sleep(0.1)
-        return False
-
-    def wait_for_text(self, text: str, timeout: float = 2.0, pane_id: Optional[str] = None):
-        """
-        Wait for text to appear, raising AssertionError if not found.
-
-        Args:
-            text: Text to search for
-            timeout: How long to wait (seconds)
-            pane_id: Specific pane to check
-
-        Raises:
-            AssertionError: If text doesn't appear within timeout
-        """
-        if not self.verify_text_appears(text, timeout, pane_id):
-            content = self.get_pane_content(pane_id)
-            raise AssertionError(
-                f"Text '{text}' did not appear within {timeout}s.\n"
-                f"Pane content:\n{content}"
-            )
+        cmd = ["tmux", "display-message", "-p", "-t", target, "#{pane_width}"]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        return int(result.stdout.strip()) if result.stdout.strip() else 0
 
     def get_global_option(self, option: str) -> str:
-        """Get a tmux global option value."""
-        result = subprocess.run(
-            ["tmux", "show", "-gv", option],
-            capture_output=True,
-            text=True
-        )
-        return result.stdout.strip() if result.returncode == 0 else ""
+        """
+        Get a tmux global option value.
 
-    def set_global_option(self, option: str, value: str):
-        """Set a tmux global option."""
-        subprocess.run(
-            ["tmux", "set", "-g", option, value],
-            check=True
+        Args:
+            option: Option name (e.g., '@help_pane_id')
+
+        Returns:
+            Option value as string
+        """
+        cmd = ["tmux", "show-option", "-gv", option]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        return result.stdout.strip()
+
+    def _session_exists(self) -> bool:
+        """
+        Check if our tmux session exists.
+
+        Returns:
+            True if session exists, False otherwise
+        """
+        result = subprocess.run(
+            ["tmux", "has-session", "-t", self.session_name],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
+        return result.returncode == 0
 
     def cleanup(self):
         """
-        Clean up the tmux session.
+        Clean up the tmux session and process.
 
-        MUST be called to prevent orphaned sessions.
-        Use try/finally or context manager to ensure this is called.
+        Kills the tmux session and closes the pexpect process.
+        MUST be called to prevent orphaned processes and sessions.
         """
         if self._is_cleaned_up:
             return
 
         self._is_cleaned_up = True
 
-        if self.process:
+        # Kill tmux session
+        try:
+            subprocess.run(
+                ["tmux", "kill-session", "-t", self.session_name],
+                capture_output=True,
+                check=False,
+            )
+        except Exception:
+            pass
+
+        # Close pexpect process
+        if hasattr(self, "process"):
             try:
-                self.process.close(force=True)
-            except:
+                if self.process.isalive():
+                    self.process.terminate(force=True)
+                self.process.close()
+            except Exception:
                 pass
 
-        subprocess.run(
-            ["tmux", "kill-session", "-t", self.session_name],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+    def __del__(self):
+        """Destructor - ensure cleanup on garbage collection."""
+        self.cleanup()
+
+
+class PtySession(BaseSession):
+    """
+    Manages a direct PTY process for testing any interactive CLI application.
+
+    This class spawns CLI processes directly via pexpect and maintains a
+    virtual terminal screen using pyte. No tmux required.
+
+    Example:
+        with PtySession(["bash", "--norc"]) as session:
+            session.send_keys("echo hello")
+            assert session.verify_text_appears("hello")
+
+        # Test fzf
+        with PtySession(["fzf"]) as session:
+            session.send_keys("test", literal=True)
+            assert session.verify_text_appears("test")
+
+        # With terminal visualization
+        with PtySession(["bash"], enable_viz=True) as session:
+            session.send_keys("ls -la")
+            # Viewers can attach via: ptytest viz (in another terminal)
+
+    Attributes:
+        command: Command and arguments to execute
+        width: Terminal width in characters
+        height: Terminal height in characters
+        timeout: Default timeout for operations
+    """
+
+    def __init__(
+        self,
+        command: List[str],
+        width: int = 120,
+        height: int = 40,
+        timeout: int = 5,
+        env: Optional[Dict[str, str]] = None,
+        cwd: Optional[str] = None,
+        enable_viz: bool = False,
+        viz_port: int = 8080,
+    ):
+        """
+        Create a PTY session for direct process testing.
+
+        Args:
+            command: Command and arguments to execute (e.g., ["bash", "--norc"])
+            width: Terminal width in characters
+            height: Terminal height in characters
+            timeout: Default timeout for operations in seconds
+            env: Environment variables (None = inherit from parent)
+            cwd: Working directory (None = current directory)
+            enable_viz: Enable terminal visualization (requires ptytest[viz])
+            viz_port: Deprecated (not used with Textual-based viz)
+
+        Raises:
+            ImportError: If enable_viz=True but viz dependencies not installed
+        """
+        super().__init__(timeout=timeout)
+        self.command = command
+        self.width = width
+        self.height = height
+        self.env = env
+        self.cwd = cwd
+
+        # Initialize attributes that cleanup() depends on
+        self._viz_server = None
+
+        # Visualization support (broadcaster for Textual viewers)
+        if enable_viz:
+            try:
+                from .viz import start_viz_broadcaster
+                self._viz_server = start_viz_broadcaster(self)
+                print(f"Visualization broadcaster started. Viewers can attach via: ptytest viz")
+            except ImportError as e:
+                raise ImportError(
+                    "Visualization dependencies not installed. "
+                    "Install with: uv pip install ptytest[viz]"
+                ) from e
+
+        # Spawn process using ptydriver's PtyProcess
+        self._pty_process = PtyProcessDriver(
+            command=command,
+            width=width,
+            height=height,
+            timeout=timeout,
+            env=env,
+            cwd=cwd
         )
 
-    def __enter__(self):
-        """Context manager support."""
-        return self
+        # Get the screen from the underlying PtyProcess
+        self.screen = self._pty_process.screen
+        self.stream = self._pty_process.stream
+        self.screen_lock = self._pty_process.screen_lock
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager cleanup."""
-        self.cleanup()
-        return False
+        # Give process time to start
+        time.sleep(0.1)
+
+    @property
+    def process(self):
+        """Get the process with compatibility layer."""
+        class PtyProcessCompat:
+            """Compatibility layer for PtyProcess from ptydriver."""
+
+            def __init__(self, ptyprocess):
+                self._ptyprocess = ptyprocess
+
+            def isalive(self):
+                """Legacy compatibility method."""
+                return self._ptyprocess.is_alive()
+
+            def send(self, text):
+                """Legacy send method."""
+                return self._ptyprocess.send(text, press_enter=True)
+
+            def sendline(self, text):
+                """Legacy sendline method."""
+                return self._ptyprocess.send(text)
+
+            def write(self, text):
+                """Legacy write method."""
+                return self._ptyprocess.send_raw(text)
+
+            def __getattr__(self, name):
+                """Delegate all other attributes to the underlying PtyProcess."""
+                return getattr(self._ptyprocess, name)
+
+        return PtyProcessCompat(self._pty_process)
+
+    def send_raw(self, sequence: str, delay: float = 0.15):
+        """
+        Send raw byte sequences or escape codes to the process.
+
+        Args:
+            sequence: Raw string to send (can include escape sequences)
+            delay: Delay after sending for processing (seconds)
+        """
+        if not self._pty_process or not self._pty_process.is_alive():
+            raise RuntimeError("Process not running")
+
+        self._pty_process.send_raw(sequence, delay=delay)
+
+    def send_keys(self, keys: str, delay: float = 0.15, literal: bool = False):
+        """
+        Send keys to the process.
+
+        Args:
+            keys: Keys to send
+            delay: Delay after sending (seconds)
+            literal: If True, send keys as-is (no Enter).
+                    If False (default), append Enter key.
+        """
+        if not self._pty_process or not self._pty_process.is_alive():
+            raise RuntimeError("Process not running")
+
+        self._pty_process.send(keys, delay=delay, press_enter=not literal)
+
+    def get_content(self, include_history: bool = True) -> str:
+        """
+        Get visible terminal content from virtual screen.
+
+        Args:
+            include_history: Not used for PtySession (no scrollback history)
+
+        Returns:
+            Text content of the current screen
+        """
+        return self._pty_process.get_content()
+
+    def get_screen(self) -> List[str]:
+        """
+        Get the current screen as a list of lines.
+
+        Returns:
+            List of lines (strings) representing the screen
+        """
+        return self._pty_process.get_screen()
+
+    def cleanup(self):
+        """
+        Clean up the process and resources.
+
+        MUST be called to prevent orphaned processes.
+        """
+        if self._is_cleaned_up:
+            return
+
+        self._is_cleaned_up = True
+
+        # Shutdown viz server if running
+        if self._viz_server:
+            try:
+                self._viz_server.shutdown()
+            except Exception:
+                pass
+
+        # Cleanup underlying PtyProcess
+        if hasattr(self, '_pty_process'):
+            self._pty_process.cleanup()
 
     def __del__(self):
         """Destructor - ensure cleanup on garbage collection."""

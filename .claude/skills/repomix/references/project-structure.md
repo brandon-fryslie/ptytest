@@ -1,0 +1,1118 @@
+# Directory Structure
+
+```
+.agents/
+  commands/
+    agent/
+      claude-rule-update.md (2 lines)
+      gemini-discuss.md (11 lines)
+    code/
+      lint-fix.md (1 lines)
+    git/
+      git-commit-push.md (3 lines)
+      git-commit.md (3 lines)
+      pr-create.md (1 lines)
+      pr-resolve-addressed.md (24 lines)
+      pr-review.md (29 lines)
+      release-note-generate.md (160 lines)
+  rules/
+    base.md (138 lines)
+.claude/
+  plugins/
+    repomix-commands/
+      .claude-plugin/
+        plugin.json (12 lines)
+      commands/
+        pack-local.md (99 lines)
+        pack-remote.md (106 lines)
+    repomix-explorer/
+      .claude-plugin/
+        plugin.json (12 lines)
+      agents/
+        explorer.md (325 lines)
+      commands/
+        explore-local.md (72 lines)
+        explore-remote.md (69 lines)
+    repomix-mcp/
+      .claude-plugin/
+        plugin.json (12 lines)
+      .mcp.json (12 lines)
+  skills/
+    browser-extension-developer/
+      SKILL.md (36 lines)
+    lint-fixer/
+      SKILL.md (38 lines)
+    website-maintainer/
+      SKILL.md (40 lines)
+  commands (1 lines)
+.claude-plugin/
+  marketplace.json (27 lines)
+.cursor/
+  rules/
+    base.mdc (1 lines)
+  commands (1 lines)
+.devcontainer/
+  devcontainer.json (52 lines)
+  Dockerfile (109 lines)
+  init-firewall.sh (137 lines)
+.github/
+  actions/
+    repomix/
+      action.yml (103 lines)
+  assets/
+    github-like-sponsor-button.svg (7 lines)
+  instructions/
+    base.instructions.md (5 lines)
+  ISSUE_TEMPLATE/
+    01_feature_request.yml (22 lines)
+    02_bug_report.yml (46 lines)
+    config.yml (6 lines)
+  releases/
+    v0.1.x/
+      v0.1.15.md (22 lines)
+      v0.1.16.md (9 lines)
+      v0.1.18.md (18 lines)
+      v0.1.19.md (19 lines)
+      v0.1.20.md (13 lines)
+      v0.1.21.md (8 lines)
+      v0.1.22.md (14 lines)
+      v0.1.23.md (22 lines)
+      v0.1.24.md (15 lines)
+      v0.1.25.md (20 lines)
+      v0.1.26.md (13 lines)
+      v0.1.27.md (15 lines)
+      v0.1.28.md (14 lines)
+      v0.1.29.md (13 lines)
+      v0.1.30.md (16 lines)
+      v0.1.31.md (33 lines)
+      v0.1.32.md (16 lines)
+      v0.1.33.md (18 lines)
+      v0.1.34.md (18 lines)
+      v0.1.35.md (30 lines)
+      v0.1.36.md (31 lines)
+      v0.1.37.md (19 lines)
+      v0.1.38.md (35 lines)
+      v0.1.39.md (20 lines)
+      v0.1.40.md (32 lines)
+      v0.1.41.md (30 lines)
+      v0.1.42.md (22 lines)
+      v0.1.43.md (21 lines)
+      v0.1.44.md (28 lines)
+      v0.1.45.md (30 lines)
+    v0.2.x/
+      v0.2.1.md (49 lines)
+      v0.2.10.md (34 lines)
+      v0.2.11.md (40 lines)
+      v0.2.12.md (36 lines)
+      v0.2.15.md (31 lines)
+      v0.2.16.md (30 lines)
+      v0.2.17.md (36 lines)
+      v0.2.2.md (52 lines)
+      v0.2.20.md (26 lines)
+      v0.2.21.md (34 lines)
+      v0.2.22.md (33 lines)
+      v0.2.23.md (30 lines)
+      v0.2.24.md (34 lines)
+      v0.2.25.md (41 lines)
+      v0.2.26.md (48 lines)
+      v0.2.28.md (52 lines)
+      v0.2.29.md (28 lines)
+      v0.2.3.md (27 lines)
+      v0.2.30.md (22 lines)
+      v0.2.32.md (75 lines)
+      v0.2.33.md (21 lines)
+      v0.2.34.md (25 lines)
+      v0.2.35.md (28 lines)
+      v0.2.36.md (53 lines)
+      v0.2.4.md (36 lines)
+      v0.2.40.md (36 lines)
+      v0.2.41.md (36 lines)
+      v0.2.5.md (16 lines)
+      v0.2.6.md (29 lines)
+      v0.2.7.md (28 lines)
+      v0.2.8.md (35 lines)
+    v0.3.x/
+      v0.3.0.md (21 lines)
+      v0.3.1.md (39 lines)
+      v0.3.2.md (45 lines)
+      v0.3.3.md (40 lines)
+      v0.3.5.md (48 lines)
+      v0.3.6.md (55 lines)
+      v0.3.7.md (66 lines)
+      v0.3.8.md (56 lines)
+      v0.3.9.md (18 lines)
+    v1.x/
+      v1.0.0.md (98 lines)
+      v1.1.0.md (33 lines)
+      v1.10.0.md (64 lines)
+      v1.10.1.md (35 lines)
+      v1.10.2.md (36 lines)
+      v1.2.0.md (47 lines)
+      v1.2.1.md (24 lines)
+      v1.3.0.md (51 lines)
+      v1.4.0.md (78 lines)
+      v1.4.1.md (19 lines)
+      v1.4.2.md (30 lines)
+      v1.5.0.md (65 lines)
+      v1.6.0.md (51 lines)
+      v1.6.1.md (30 lines)
+      v1.7.0.md (61 lines)
+      v1.8.0.md (42 lines)
+      v1.9.0.md (74 lines)
+      v1.9.1.md (41 lines)
+      v1.9.2.md (29 lines)
+  workflows/
+    autofix.yml (55 lines)
+    benchmark.yml (123 lines)
+    ci.yml (264 lines)
+    claude-code-review.yml (45 lines)
+    claude-issue-similar.yml (80 lines)
+    claude-issue-triage.yml (80 lines)
+    claude.yml (48 lines)
+    codeql.yml (51 lines)
+    docker.yml (69 lines)
+    homebrew.yml (24 lines)
+    npm-publish.yml (62 lines)
+    pack-repository.yml (27 lines)
+    pinact.yml (14 lines)
+    schema-update.yml (32 lines)
+    test-action.yml (56 lines)
+  CODEOWNERS (2 lines)
+  copilot-instructions.md (1 lines)
+  FUNDING.yml (1 lines)
+  pull_request_template.md (6 lines)
+  renovate.json5 (22 lines)
+.kiro/
+  steering/
+    base.md (1 lines)
+bin/
+  repomix.cjs (58 lines)
+browser/
+  entrypoints/
+    background.ts (56 lines)
+    content.ts (163 lines)
+    styles.css (14 lines)
+  public/
+    _locales/
+      de/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      en/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      es/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      fr/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      hi/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      id/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      ja/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      ko/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      pt_BR/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      vi/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      zh_CN/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+      zh_TW/
+        detailed-description.txt (24 lines)
+        messages.json (10 lines)
+    images/
+      icon.svg (6 lines)
+  scripts/
+    generate-icons.ts (72 lines)
+  tests/
+    repomix-integration.test.ts (47 lines)
+  .gitignore (50 lines)
+  CLAUDE.md (46 lines)
+  package.json (49 lines)
+  README.md (79 lines)
+  tsconfig.json (19 lines)
+  types.d.ts (17 lines)
+  vitest.config.ts (13 lines)
+  wxt.config.ts (47 lines)
+scripts/
+  memory/
+    src/
+      memory-test.ts (376 lines)
+      types.ts (49 lines)
+    .gitignore (24 lines)
+    package.json (34 lines)
+    README.md (33 lines)
+    tsconfig.json (21 lines)
+src/
+  cli/
+    actions/
+      workers/
+        defaultActionWorker.ts (111 lines)
+      defaultAction.ts (369 lines)
+      initAction.ts (178 lines)
+      mcpAction.ts (7 lines)
+      migrationAction.ts (325 lines)
+      remoteAction.ts (292 lines)
+      versionAction.ts (7 lines)
+    prompts/
+      skillPrompts.ts (92 lines)
+    reporters/
+      tokenCountTreeReporter.ts (102 lines)
+    cliReport.ts (236 lines)
+    cliRun.ts (270 lines)
+    cliSpinner.ts (70 lines)
+    types.ts (69 lines)
+  config/
+    configLoad.ts (243 lines)
+    configSchema.ts (173 lines)
+    defaultIgnore.ts (163 lines)
+    globalDirectory.ts (15 lines)
+  core/
+    file/
+      workers/
+        fileCollectWorker.ts (56 lines)
+        fileProcessWorker.ts (27 lines)
+      fileCollect.ts (82 lines)
+      fileManipulate.ts (106 lines)
+      filePathSort.ts (24 lines)
+      fileProcess.ts (68 lines)
+      fileProcessContent.ts (66 lines)
+      fileRead.ts (73 lines)
+      fileSearch.ts (428 lines)
+      fileStdin.ts (116 lines)
+      fileTreeGenerate.ts (115 lines)
+      fileTypes.ts (9 lines)
+      packageJsonParse.ts (31 lines)
+      permissionCheck.ts (112 lines)
+      truncateBase64.ts (75 lines)
+    git/
+      gitCommand.ts (204 lines)
+      gitDiffHandle.ts (94 lines)
+      gitHubArchive.ts (343 lines)
+      gitHubArchiveApi.ts (99 lines)
+      gitLogHandle.ts (114 lines)
+      gitRemoteHandle.ts (37 lines)
+      gitRemoteParse.ts (201 lines)
+      gitRepositoryHandle.ts (53 lines)
+    metrics/
+      workers/
+        calculateMetricsWorker.ts (50 lines)
+        types.ts (5 lines)
+      calculateGitDiffMetrics.ts (59 lines)
+      calculateGitLogMetrics.ts (51 lines)
+      calculateMetrics.ts (108 lines)
+      calculateOutputMetrics.ts (63 lines)
+      calculateSelectiveFileMetrics.ts (59 lines)
+      TokenCounter.ts (48 lines)
+      tokenCounterFactory.ts (31 lines)
+    output/
+      outputStyles/
+        markdownStyle.ts (87 lines)
+        plainStyle.ts (109 lines)
+        xmlStyle.ts (89 lines)
+      outputGenerate.ts (369 lines)
+      outputGeneratorTypes.ts (38 lines)
+      outputSort.ts (57 lines)
+      outputStyleDecorate.ts (206 lines)
+      outputStyleUtils.ts (243 lines)
+    packager/
+      copyToClipboardIfEnabled.ts (40 lines)
+      writeOutputToDisk.ts (22 lines)
+    security/
+      workers/
+        secretlint.d.ts (6 lines)
+        securityCheckWorker.ts (90 lines)
+      filterOutUntrustedFiles.ts (8 lines)
+      securityCheck.ts (105 lines)
+      validateFileSafety.ts (65 lines)
+    skill/
+      packSkill.ts (264 lines)
+      skillSectionGenerators.ts (94 lines)
+      skillStatistics.ts (196 lines)
+      skillStyle.ts (113 lines)
+      skillTechStack.ts (624 lines)
+      skillUtils.ts (161 lines)
+      writeSkillOutput.ts (58 lines)
+    tokenCount/
+      buildTokenCountStructure.ts (70 lines)
+      types.ts (12 lines)
+    treeSitter/
+      parseStrategies/
+        BaseParseStrategy.ts (124 lines)
+        CssParseStrategy.ts (51 lines)
+        DefaultParseStrategy.ts (37 lines)
+        GoParseStrategy.ts (194 lines)
+        PythonParseStrategy.ts (140 lines)
+        TypeScriptParseStrategy.ts (165 lines)
+        VueParseStrategy.ts (32 lines)
+      queries/
+        queryC.ts (13 lines)
+        queryCpp.ts (19 lines)
+        queryCSharp.ts (53 lines)
+        queryCss.ts (9 lines)
+        queryDart.ts (29 lines)
+        queryGo.ts (64 lines)
+        queryJava.ts (33 lines)
+        queryJavascript.ts (90 lines)
+        queryPhp.ts (48 lines)
+        queryPython.ts (32 lines)
+        queryRuby.ts (72 lines)
+        queryRust.ts (75 lines)
+        querySolidity.ts (27 lines)
+        querySwift.ts (45 lines)
+        queryTypescript.ts (73 lines)
+        queryVue.ts (11 lines)
+        README.md (25 lines)
+      languageConfig.ts (241 lines)
+      languageParser.ts (116 lines)
+      loadLanguage.ts (29 lines)
+      parseFile.ts (154 lines)
+    packager.ts (181 lines)
+  mcp/
+    prompts/
+      packRemoteRepositoryPrompts.ts (55 lines)
+    tools/
+      attachPackedOutputTool.ts (314 lines)
+      fileSystemReadDirectoryTool.ts (88 lines)
+      fileSystemReadFileTool.ts (105 lines)
+      generateSkillTool.ts (151 lines)
+      grepRepomixOutputTool.ts (288 lines)
+      mcpToolRuntime.ts (248 lines)
+      packCodebaseTool.ts (118 lines)
+      packRemoteRepositoryTool.ts (116 lines)
+      readRepomixOutputTool.ts (132 lines)
+    mcpServer.ts (88 lines)
+  shared/
+    constants.ts (3 lines)
+    errorHandle.ts (125 lines)
+    logger.ts (127 lines)
+    memoryUtils.ts (87 lines)
+    patternUtils.ts (40 lines)
+    processConcurrency.ts (108 lines)
+    types.ts (1 lines)
+  types/
+    git-url-parse.d.ts (55 lines)
+  index.ts (58 lines)
+tests/
+  cli/
+    actions/
+      workers/
+        defaultActionWorker.test.ts (385 lines)
+      defaultAction.buildCliConfig.test.ts (27 lines)
+      defaultAction.test.ts (394 lines)
+      defaultAction.tokenCountTree.test.ts (194 lines)
+      diffsFlag.test.ts (35 lines)
+      initAction.test.ts (236 lines)
+      mcpAction.test.ts (33 lines)
+      migrationAction.test.ts (208 lines)
+      remoteAction.test.ts (362 lines)
+      versionAction.test.ts (26 lines)
+    prompts/
+      skillPrompts.test.ts (121 lines)
+    reporters/
+      tokenCountTreeReporter.test.ts (121 lines)
+    cliReport.binaryFiles.test.ts (66 lines)
+    cliReport.test.ts (334 lines)
+    cliRun.test.ts (423 lines)
+    cliSpinner.test.ts (204 lines)
+  config/
+    configLoad.integration.test.ts (152 lines)
+    configLoad.test.ts (355 lines)
+    configSchema.test.ts (282 lines)
+    globalDirectory.test.ts (87 lines)
+  core/
+    file/
+      fileCollect.test.ts (236 lines)
+      fileManipulate.test.ts (1040 lines)
+      filePathSort.test.ts (63 lines)
+      fileProcess.test.ts (173 lines)
+      fileProcessContent.test.ts (178 lines)
+      fileSearch.test.ts (1022 lines)
+      fileStdin.test.ts (313 lines)
+      packageJsonParse.test.ts (55 lines)
+      permissionCheck.test.ts (281 lines)
+      truncateBase64.test.ts (66 lines)
+    git/
+      gitCommand.test.ts (408 lines)
+      gitDiffHandle.test.ts (180 lines)
+      gitHubArchive.test.ts (505 lines)
+      gitHubArchiveApi.test.ts (183 lines)
+      gitLogHandle.test.ts (298 lines)
+      gitRemoteHandle.test.ts (88 lines)
+      gitRemoteParse.test.ts (282 lines)
+      gitRepositoryHandle.test.ts (112 lines)
+    metrics/
+      calculateGitDiffMetrics.test.ts (352 lines)
+      calculateGitLogMetrics.test.ts (421 lines)
+      calculateMetrics.test.ts (82 lines)
+      calculateOutputMetrics.test.ts (175 lines)
+      calculateSelectiveFileMetrics.test.ts (66 lines)
+      diffTokenCount.test.ts (278 lines)
+      TokenCounter.test.ts (167 lines)
+    output/
+      outputStyles/
+        jsonStyle.test.ts (147 lines)
+        markdownStyle.test.ts (239 lines)
+        plainStyle.test.ts (47 lines)
+        xmlStyle.test.ts (48 lines)
+      diffsInOutput.test.ts (204 lines)
+      flagFullDirectoryStructure.test.ts (117 lines)
+      outputGenerate.test.ts (308 lines)
+      outputGenerateDiffs.test.ts (246 lines)
+      outputSort.test.ts (118 lines)
+      outputStyleDecorate.test.ts (169 lines)
+    packager/
+      copyToClipboardIfEnabled.test.ts (136 lines)
+      diffsFunctionality.test.ts (147 lines)
+      writeOutputToDisk.test.ts (51 lines)
+    security/
+      workers/
+        securityCheckWorker.test.ts (77 lines)
+      filterOutUntrustedFiles.test.ts (35 lines)
+      securityCheck.test.ts (234 lines)
+      validateFileSafety.test.ts (40 lines)
+    skill/
+      packSkill.test.ts (458 lines)
+      skillSectionGenerators.test.ts (124 lines)
+      skillStatistics.test.ts (179 lines)
+      skillStyle.test.ts (117 lines)
+      skillTechStack.test.ts (330 lines)
+      skillUtils.test.ts (174 lines)
+      writeSkillOutput.test.ts (207 lines)
+    tokenCount/
+      buildTokenCountStructure.test.ts (146 lines)
+    treeSitter/
+      LanguageParser.test.ts (34 lines)
+      loadLanguage.test.ts (56 lines)
+      parseFile.c.test.ts (202 lines)
+      parseFile.comments.test.ts (227 lines)
+      parseFile.cpp.test.ts (100 lines)
+      parseFile.csharp.test.ts (331 lines)
+      parseFile.css.test.ts (193 lines)
+      parseFile.dart.test.ts (137 lines)
+      parseFile.go.test.ts (186 lines)
+      parseFile.java.test.ts (40 lines)
+      parseFile.javascript.test.ts (64 lines)
+      parseFile.php.test.ts (78 lines)
+      parseFile.python.test.ts (118 lines)
+      parseFile.ruby.test.ts (209 lines)
+      parseFile.rust.test.ts (66 lines)
+      parseFile.solidity.test.ts (93 lines)
+      parseFile.swift.test.ts (387 lines)
+      parseFile.test.ts (52 lines)
+      parseFile.typescript.test.ts (462 lines)
+      parseFile.vue.test.ts (171 lines)
+    packager.test.ts (123 lines)
+  fixtures/
+    config-js/
+      repomix-dynamic.config.js (15 lines)
+      repomix.config.cjs (9 lines)
+      repomix.config.js (12 lines)
+      repomix.config.mjs (11 lines)
+    config-ts/
+      repomix-dynamic.config.ts (16 lines)
+      repomix.config.cts (11 lines)
+      repomix.config.mts (11 lines)
+      repomix.config.ts (12 lines)
+  integration-tests/
+    packager.test.ts (235 lines)
+  mcp/
+    prompts/
+      packRemoteRepositoryPrompts.test.ts (82 lines)
+    tools/
+      attachPackedOutputTool.test.ts (422 lines)
+      fileSystemReadDirectoryTool.test.ts (69 lines)
+      fileSystemReadFileTool.test.ts (219 lines)
+      generateSkillTool.test.ts (271 lines)
+      grepRepomixOutputTool.test.ts (736 lines)
+      mcpToolRuntime.test.ts (338 lines)
+      packCodebaseTool.test.ts (184 lines)
+      readRepomixOutputTool.test.ts (198 lines)
+    mcpServer.test.ts (192 lines)
+  shared/
+    logger.test.ts (113 lines)
+    patternUtils.test.ts (54 lines)
+    processConcurrency.test.ts (151 lines)
+  testing/
+    testUtils.ts (51 lines)
+website/
+  client/
+    .vitepress/
+      config/
+        configDe.ts (85 lines)
+        configEnUs.ts (63 lines)
+        configEs.ts (85 lines)
+        configFr.ts (88 lines)
+        configHi.ts (85 lines)
+        configId.ts (88 lines)
+        configIt.ts (88 lines)
+        configJa.ts (83 lines)
+        configKo.ts (85 lines)
+        configPtBr.ts (85 lines)
+        configRu.ts (85 lines)
+        configShard.ts (188 lines)
+        configVi.ts (88 lines)
+        configZhCn.ts (82 lines)
+        configZhTw.ts (85 lines)
+      theme/
+        component.d.ts (7 lines)
+        custom.css (34 lines)
+        index.ts (16 lines)
+        style.css (130 lines)
+      config.ts (36 lines)
+    components/
+      api/
+        client.ts (85 lines)
+      Home/
+        FileSelectionWarning.vue (43 lines)
+        Hero.vue (67 lines)
+        PackButton.vue (101 lines)
+        PackIcon.vue (31 lines)
+        TryIt.vue (433 lines)
+        TryItFileSelection.vue (373 lines)
+        TryItFileUpload.vue (220 lines)
+        TryItFolderUpload.vue (238 lines)
+        TryItLoading.vue (77 lines)
+        TryItPackOptions.vue (441 lines)
+        TryItResult.vue (137 lines)
+        TryItResultContent.vue (550 lines)
+        TryItResultErrorContent.vue (156 lines)
+        TryItUrlInput.vue (191 lines)
+      utils/
+        analytics.ts (144 lines)
+        requestHandlers.ts (92 lines)
+        resultViewer.ts (117 lines)
+        validation.ts (20 lines)
+      Home.vue (17 lines)
+      HomeBadges.vue (66 lines)
+      YouTubeVideo.vue (40 lines)
+    composables/
+      useFileUpload.ts (358 lines)
+      usePackOptions.ts (72 lines)
+      usePackRequest.ts (197 lines)
+      useZipProcessor.ts (40 lines)
+    constants/
+      fileSelection.ts (1 lines)
+      videos.ts (5 lines)
+    scripts/
+      generateSchema.ts (48 lines)
+    src/
+      de/
+        guide/
+          development/
+            index.md (148 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (34 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (112 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (53 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (43 lines)
+          github-actions.md (125 lines)
+          index.md (79 lines)
+          installation.md (82 lines)
+          mcp-server.md (254 lines)
+          output.md (264 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (124 lines)
+          remote-repository-processing.md (68 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (205 lines)
+          use-cases.md (152 lines)
+        index.md (244 lines)
+      en/
+        guide/
+          development/
+            index.md (165 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (35 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (112 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (53 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (43 lines)
+          github-actions.md (123 lines)
+          index.md (79 lines)
+          installation.md (82 lines)
+          mcp-server.md (254 lines)
+          output.md (262 lines)
+          privacy.md (25 lines)
+          prompt-examples.md (124 lines)
+          remote-repository-processing.md (68 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (205 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+      es/
+        guide/
+          development/
+            index.md (148 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (35 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (112 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (53 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (42 lines)
+          github-actions.md (123 lines)
+          index.md (79 lines)
+          installation.md (81 lines)
+          mcp-server.md (254 lines)
+          output.md (274 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (124 lines)
+          remote-repository-processing.md (68 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (205 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+      fr/
+        guide/
+          development/
+            index.md (146 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (35 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (110 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (54 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (39 lines)
+          github-actions.md (123 lines)
+          index.md (79 lines)
+          installation.md (80 lines)
+          mcp-server.md (252 lines)
+          output.md (255 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (119 lines)
+          remote-repository-processing.md (62 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (218 lines)
+          use-cases.md (152 lines)
+        index.md (241 lines)
+      hi/
+        guide/
+          development/
+            index.md (118 lines)
+            using-repomix-as-a-library.md (212 lines)
+          tips/
+            best-practices.md (184 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (130 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (160 lines)
+          community-projects.md (35 lines)
+          configuration.md (315 lines)
+          custom-instructions.md (190 lines)
+          github-actions.md (175 lines)
+          index.md (79 lines)
+          installation.md (97 lines)
+          mcp-server.md (254 lines)
+          output.md (274 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (140 lines)
+          remote-repository-processing.md (109 lines)
+          security.md (64 lines)
+          sponsors.md (30 lines)
+          usage.md (212 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+      id/
+        guide/
+          development/
+            index.md (129 lines)
+            using-repomix-as-a-library.md (247 lines)
+          tips/
+            best-practices.md (131 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (113 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (53 lines)
+          community-projects.md (35 lines)
+          configuration.md (315 lines)
+          custom-instructions.md (54 lines)
+          github-actions.md (107 lines)
+          index.md (79 lines)
+          installation.md (70 lines)
+          mcp-server.md (254 lines)
+          output.md (274 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (93 lines)
+          remote-repository-processing.md (82 lines)
+          security.md (84 lines)
+          sponsors.md (30 lines)
+          usage.md (246 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+      it/
+        guide/
+          development/
+            index.md (146 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (35 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (110 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (54 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (39 lines)
+          github-actions.md (123 lines)
+          index.md (79 lines)
+          installation.md (80 lines)
+          mcp-server.md (252 lines)
+          output.md (255 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (119 lines)
+          remote-repository-processing.md (62 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (218 lines)
+          use-cases.md (152 lines)
+        index.md (241 lines)
+      ja/
+        guide/
+          development/
+            index.md (165 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (41 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (111 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (53 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (57 lines)
+          github-actions.md (123 lines)
+          index.md (72 lines)
+          installation.md (82 lines)
+          mcp-server.md (254 lines)
+          output.md (296 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (126 lines)
+          remote-repository-processing.md (68 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (205 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+      ko/
+        guide/
+          development/
+            index.md (148 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (35 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (112 lines)
+          command-line-options.md (104 lines)
+          comment-removal.md (53 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (66 lines)
+          github-actions.md (123 lines)
+          index.md (79 lines)
+          installation.md (82 lines)
+          mcp-server.md (254 lines)
+          output.md (287 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (124 lines)
+          remote-repository-processing.md (68 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (205 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+      pt-br/
+        guide/
+          development/
+            index.md (148 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (33 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (112 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (53 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (42 lines)
+          github-actions.md (123 lines)
+          index.md (79 lines)
+          installation.md (82 lines)
+          mcp-server.md (254 lines)
+          output.md (274 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (124 lines)
+          remote-repository-processing.md (68 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (205 lines)
+          use-cases.md (152 lines)
+        index.md (244 lines)
+      public/
+        images/
+          repomix-logo.svg (6 lines)
+        schemas/
+          0.3.5/
+            schema.json (134 lines)
+          1.10.0/
+            schema.json (163 lines)
+          1.10.1/
+            schema.json (163 lines)
+          1.10.2/
+            schema.json (163 lines)
+          1.3.0/
+            schema.json (144 lines)
+          1.4.0/
+            schema.json (150 lines)
+          1.4.1/
+            schema.json (150 lines)
+          1.4.2/
+            schema.json (151 lines)
+          1.5.0/
+            schema.json (151 lines)
+          1.6.0/
+            schema.json (151 lines)
+          1.6.1/
+            schema.json (151 lines)
+          1.7.0/
+            schema.json (154 lines)
+          1.8.0/
+            schema.json (163 lines)
+          1.9.0/
+            schema.json (163 lines)
+          1.9.1/
+            schema.json (163 lines)
+          1.9.2/
+            schema.json (163 lines)
+          latest/
+            schema.json (163 lines)
+      ru/
+        guide/
+          development/
+            index.md (165 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (35 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (112 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (53 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (43 lines)
+          github-actions.md (131 lines)
+          index.md (79 lines)
+          installation.md (82 lines)
+          mcp-server.md (254 lines)
+          output.md (262 lines)
+          privacy.md (25 lines)
+          prompt-examples.md (124 lines)
+          remote-repository-processing.md (68 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (205 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+      shared/
+        sponsors-section.md (22 lines)
+      vi/
+        guide/
+          development/
+            index.md (190 lines)
+            using-repomix-as-a-library.md (311 lines)
+          tips/
+            best-practices.md (129 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (194 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (178 lines)
+          community-projects.md (35 lines)
+          configuration.md (315 lines)
+          custom-instructions.md (115 lines)
+          github-actions.md (211 lines)
+          index.md (79 lines)
+          installation.md (123 lines)
+          mcp-server.md (254 lines)
+          output.md (342 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (147 lines)
+          remote-repository-processing.md (143 lines)
+          security.md (141 lines)
+          sponsors.md (30 lines)
+          usage.md (301 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+      zh-cn/
+        guide/
+          development/
+            index.md (148 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (37 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (111 lines)
+          command-line-options.md (104 lines)
+          comment-removal.md (68 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (78 lines)
+          github-actions.md (123 lines)
+          index.md (79 lines)
+          installation.md (82 lines)
+          mcp-server.md (254 lines)
+          output.md (287 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (124 lines)
+          remote-repository-processing.md (68 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (205 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+      zh-tw/
+        guide/
+          development/
+            index.md (148 lines)
+            using-repomix-as-a-library.md (86 lines)
+          tips/
+            best-practices.md (37 lines)
+          agent-skills-generation.md (213 lines)
+          claude-code-plugins.md (163 lines)
+          code-compress.md (101 lines)
+          command-line-options.md (105 lines)
+          comment-removal.md (68 lines)
+          community-projects.md (35 lines)
+          configuration.md (367 lines)
+          custom-instructions.md (78 lines)
+          github-actions.md (123 lines)
+          index.md (79 lines)
+          installation.md (82 lines)
+          mcp-server.md (254 lines)
+          output.md (273 lines)
+          privacy.md (1 lines)
+          prompt-examples.md (100 lines)
+          remote-repository-processing.md (68 lines)
+          security.md (65 lines)
+          sponsors.md (30 lines)
+          usage.md (205 lines)
+          use-cases.md (152 lines)
+        index.md (246 lines)
+    types/
+      ui.ts (1 lines)
+    utils/
+      urlParams.ts (206 lines)
+      videos.ts (9 lines)
+    .gitignore (4 lines)
+    .tool-versions (1 lines)
+    Dockerfile (32 lines)
+    package.json (25 lines)
+    tsconfig.json (31 lines)
+    tsconfig.node.json (10 lines)
+  server/
+    src/
+      actions/
+        packAction.ts (159 lines)
+      domains/
+        pack/
+          utils/
+            cache.ts (86 lines)
+            fileUtils.ts (184 lines)
+            sharedInstance.ts (7 lines)
+            validation.ts (31 lines)
+          processZipFile.ts (244 lines)
+          remoteRepo.ts (126 lines)
+      middlewares/
+        bodyLimit.ts (12 lines)
+        cloudLogger.ts (98 lines)
+        cors.ts (21 lines)
+        rateLimit.ts (20 lines)
+      utils/
+        clientInfo.ts (25 lines)
+        errorHandler.ts (53 lines)
+        http.ts (19 lines)
+        logger.ts (72 lines)
+        memory.ts (59 lines)
+        processConcurrency.ts (8 lines)
+        rateLimit.ts (41 lines)
+        time.ts (31 lines)
+        validation.ts (14 lines)
+      index.ts (60 lines)
+      types.ts (45 lines)
+    .dockerignore (70 lines)
+    .gitignore (2 lines)
+    cloudbuild.yaml (79 lines)
+    Dockerfile (54 lines)
+    package.json (30 lines)
+    tsconfig.json (13 lines)
+  compose.yml (35 lines)
+  README.md (33 lines)
+.codecov.yml (10 lines)
+.coderabbit.yaml (39 lines)
+.dockerignore (12 lines)
+.editorconfig (13 lines)
+.gitignore (59 lines)
+.oxlintrc.json (6 lines)
+.pinact.yaml (12 lines)
+.repomixignore (4 lines)
+.secretlintrc.json (7 lines)
+.tool-versions (1 lines)
+AGENTS.md (1 lines)
+biome.json (80 lines)
+CLAUDE.md (1 lines)
+CODE_OF_CONDUCT.md (47 lines)
+CONTRIBUTING.md (105 lines)
+Dockerfile (26 lines)
+LICENSE (7 lines)
+llms-install.md (269 lines)
+package.json (123 lines)
+README.md (1735 lines)
+repomix-instruction.md (286 lines)
+repomix.config.json (44 lines)
+SECURITY.md (5 lines)
+tsconfig.build.json (7 lines)
+tsconfig.json (23 lines)
+typos.toml (17 lines)
+vitest.config.ts (16 lines)
+```
